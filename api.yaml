@@ -1,0 +1,160 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: Practice Manager API
+  description: An API to interact with TriageLogic Practices.
+  contact:
+    name: Cody Stanley
+    url: https://support.triagelogic.com
+    email: support@triagelogic.com
+consumes:
+  - application/x-www-form-urlencoded
+produces:
+  - application/json
+paths:
+  /practices: 
+    get:
+      summary: Get a list of practices
+      operationId: getPractices
+      x-google-backend:
+        address: https://us-central1-qa-assist-mockup.cloudfunctions.net/get_practices
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: Successful response with a list of practices and their IDs
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                prac_id:
+                  type: integer
+                  example: 100000
+                prac_name:
+                  type: string
+                  example: "North County Internal Medicine"
+        404:
+          description: No practices found.
+  /practices/officeHours/{prac_id}:
+    get:
+      summary: Get office hours for a specific practice
+      operationId: getOfficeHours
+      parameters:
+        - name: prac_id
+          in: path
+          description: ID of the practice to retrieve office hours for
+          required: true
+          type: integer
+          format: int64 # Assuming prac_id is a 64-bit integer
+      x-google-backend:  
+        address: https://us-central1-qa-assist-mockup.cloudfunctions.net/getOfficeHours
+        path_translation: APPEND_PATH_TO_ADDRESS 
+      responses:
+        200:
+          description: Successful response with office hours for the practice
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                prac_id:
+                  type: integer
+                  example: 100000
+              # [TO DO: Add full schema]
+        404:
+          description: Practice not found
+  /practices/preferences/{prac_id}:
+    get:
+      summary: Retrieve the ed/uc preferences for the specified practice
+      operationId: getPreferences
+      parameters:
+        - name: prac_id
+          in: path
+          description: ID of the practice to retrieve preferences for
+          required: true
+          type: integer
+          format: int64
+      x-google-backend:  
+        address: https://us-central1-qa-assist-mockup.cloudfunctions.net/get_preferences
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+            description: Successful response with the preferences for the practice
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  pref_prac:
+                    description: The practice id attached to the preferences.
+                    type: integer
+                    example: 100000
+                  pref_id:
+                    type: integer
+                    example: 100000
+                  as_only:
+                    type: boolean
+                    example: 0
+                  pref_ed_uc:
+                    type: string
+                    example: Christian Hospital BJC Health - 11133 Dunn Road St Louis Missouri 63136 314-653-5755 & Fax 314-355-4148
+                  pref_other_locations:
+                    type: string
+                    example:
+                  care_advice:
+                    type: string
+                    enum: [Detailed, ] # [TO DO: Add Enum Values]
+                    example: Detailed
+                  ia_questions:
+                    type: string
+                    enum: [Full, ] # [TO DO: Add Enum Values]
+                    example: Full
+  /practices/contacts/{prac_id}:
+    get:
+      summary: Retrieve the contacts for the specified practice.
+      operationId: getContacts
+      parameters:
+        - name: prac_id
+          in: path
+          description: ID of the practice to retrieve office hours for
+          required: true
+          type: integer
+          format: int64
+      x-google-backend:  
+        address: https://us-central1-qa-assist-mockup.cloudfunctions.net/get_contacts
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+            description: Successful response with contacts for the specified practice.
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  con_prac:
+                    type: integer
+                    example: 100000
+                  con_id:
+                    type: integer
+                    example: 100000
+                  con_type:
+                    type: string
+                    example: "Emergency"
+                  con_first:
+                    type: string
+                    example: "Darla"
+                  con_last:
+                    type: string
+                    example: Frey
+                  con_title:
+                    type: string
+                    example: RN
+                  con_cell:
+                    type: string
+                    example: 6184026402
+                  con_other:
+                    type: string
+                    example: 0000000000
+                  con_email:
+                    type: string
+                    example: dafrey@essehealth.com

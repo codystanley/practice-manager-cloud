@@ -1,0 +1,196 @@
+/* ------------------------ */
+/* Practice Dropdown Loader */
+/* ------------------------ */
+
+//fetch('https://us-central1-qa-assist-mockup.cloudfunctions.net/get_practices')
+
+fetch ('https://us-east4-dev-one-420013.cloudfunctions.net/get_practices')
+
+.then(practiceResponse => practiceResponse.json())
+
+.then(practices => {
+    const practiceDropdown = document.getElementById('practiceDropdown');
+
+    // Populate dropdown with practices
+    practices.forEach(practice => {
+        const option = document.createElement('option');
+        option.value = practice.prac_id;
+        option.text = practice.prac_name;
+        practiceDropdown.add(option);
+    });
+});
+
+/* ------------------------- */
+/* Office Information Loader */
+/* ------------------------- */
+document.getElementById('practiceDropdown').addEventListener('change', function() {
+    
+    const selectedPracticeId = this.value;
+    const apiURL = `https://us-central1-qa-assist-mockup.cloudfunctions.net/get_practiceInformation/${selectedPracticeId}`;
+
+    
+    fetch(apiURL)
+
+    .then(pracInfoResponse => {
+        if (!pracInfoResponse.ok) { // Check if the response is successful
+            throw new Error('Network response was not ok.');
+        }
+        return pracInfoResponse.json();
+    })
+
+    .then(practiceInformation => {
+        console.log("selectedPracticeId:", selectedPracticeId);
+        console.log("practiceInformation:", practiceInformation);
+        const selectedPractice = practiceInformation.find(practice => practice.prac_id == selectedPracticeId);
+        if (!selectedPractice) {
+            console.error("No practice found with ID:", selectedPracticeId);
+            document.getElementById('practiceAddress').textContent = "Practice not found.";
+            
+        } else {
+            document.getElementById('practiceAddress').innerHTML = "<p>" + selectedPractice.prac_street+ "</p>" + "<p>" + selectedPractice.prac_city + ", " + selectedPractice.prac_state + " " + selectedPractice.prac_zip + "</p>";
+            document.getElementById('officePhone').innerHTML = "<strong>Office:</strong> " + "<a href='tel:+" + selectedPractice.office_phone + "'>" + selectedPractice.office_phone+ "</a>";
+            document.getElementById('backlinePhone').innerHTML = "<strong>Backline:</strong> " + selectedPractice.backline_phone;
+            document.getElementById('fax').innerHTML = "<strong>Fax:</strong> " + selectedPractice.fax_phone;
+        }
+    });
+});
+
+/* ------------------- */
+/* Office Hours Loader */
+/* ------------------- */
+document.getElementById('practiceDropdown').addEventListener('change', function() {
+    const selectedPracticeId = this.value;
+    const hoursContainer = document.getElementById("officeHours");
+
+    fetch('https://us-central1-qa-assist-mockup.cloudfunctions.net/get_officeHours')
+        .then(hoursResponse => {
+            if (!hoursResponse.ok) { // Check if the response is successful
+                throw new Error('Network response was not ok.');
+            }
+            return hoursResponse.json();
+        })
+        .then(hours => {
+            // Ensure hours is an array before using find
+            if (Array.isArray(hours)) {
+                const selectedPractice = hours.find(hours => hours.hours_prac == selectedPracticeId); // Convert to number for comparison
+                if (selectedPractice) {
+                    document.getElementById('timezone').innerHTML = "<strong>Timezone: </strong>" + selectedPractice.timezone;
+                    document.getElementById('monday').innerHTML = 
+                        "<strong>Monday: </strong>" + selectedPractice.mon_has_hours + " " + selectedPractice.mon_open + " - " + selectedPractice.mon_close;
+                    document.getElementById('tuesday').innerHTML = 
+                        "<strong>Tuesday: </strong>" + selectedPractice.tue_has_hours + " " + selectedPractice.tue_open + " - " + selectedPractice.tue_close;
+                    document.getElementById('wednesday').innerHTML = 
+                        "<strong>Wednesday: </strong>" + selectedPractice.wed_has_hours + " " + selectedPractice.wed_open + " - " + selectedPractice.wed_close;
+                    document.getElementById('thursday').innerHTML = 
+                        "<strong>Thursday: </strong>" + selectedPractice.thu_has_hours + " " + selectedPractice.thu_open + " - " + selectedPractice.thu_close;
+                    document.getElementById('friday').innerHTML = 
+                        "<strong>Friday: </strong>" + selectedPractice.fri_has_hours + " " + selectedPractice.fri_open + " - " + selectedPractice.fri_close;
+                    document.getElementById('saturday').innerHTML = 
+                        "<strong>Saturday: </strong>" + selectedPractice.sat_has_hours + " " + selectedPractice.sat_open + " - " + selectedPractice.sat_close;
+                    document.getElementById('sunday').innerHTML = 
+                        "<strong>Sunday: </strong>" + selectedPractice.sat_has_hours + " " + selectedPractice.sat_open + " - " + selectedPractice.sat_close;
+                } else {
+                    document.getElementById('monday').innerHTML = "Office hours not found for this practice.";
+                }
+            } else {
+                // Handle case where the response is not an array
+                document.getElementById('monday').innerHTML = "Invalid data format received.";
+            }
+        })
+        .catch(error => {
+            // Handle fetch errors or JSON parsing errors
+            console.error("Error fetching or parsing hours:", error);
+            document.getElementById('monday').innerHTML = "Error fetching office hours."; 
+        });
+});
+
+/* --------------------------- */
+/* Contacts Information Loader */
+/* --------------------------- */
+document.getElementById('practiceDropdown').addEventListener('change', function() {
+    
+    const selectedPracticeId = this.value;
+
+    const contactContainer = document.getElementById("contactInfo");
+    
+    fetch('get_contacts.php')
+    
+    .then(contactResponse => contactResponse.json())
+    
+    .then(contacts => {
+        const contactsByType = {};
+        contacts.forEach(contact => {
+        const type = contact.con_type;
+        if (!contactsByType[type]) {
+            contactsByType[type] = [];
+        }
+        contactsByType[type].push(contact);
+    });
+
+    for (const type in contactsByType) {
+        const wrapper = document.createElement("div");
+        wrapper.classList.add("col-4");
+
+        const card = document.createElement("div");
+        card.classList.add("card", "mb-3");
+        wrapper.appendChild(card);
+
+        // Create card header with the type as the title
+        const cardHeader = document.createElement("div");
+        cardHeader.classList.add("card-header");
+        cardHeader.textContent = type;
+        card.appendChild(cardHeader);
+
+        // Create a list within the card body
+        const listGroup = document.createElement("ul");
+        listGroup.classList.add("list-group", "list-group-flush");
+
+        // Add contacts of this type to the list
+        contactsByType[type].forEach(contact => {
+            const listItem = document.createElement("li");
+            listItem.classList.add("list-group-item");
+
+            // Display contact information within the list item
+            const nameElement = document.createElement("strong");
+            nameElement.textContent = contact._con_full_name;
+
+            const detailsElement = document.createElement("p");
+            detailsElement.classList.add("mb-0"); // Remove bottom margin from the paragraph
+            detailsElement.textContent = `Cell: ${contact.con_cell}`;
+
+            listItem.appendChild(nameElement);
+            listItem.appendChild(detailsElement);
+            listGroup.appendChild(listItem);
+        });
+
+        // Append the list to the card body
+        const cardBody = document.createElement("div");
+        cardBody.classList.add("card-body");
+        cardBody.appendChild(listGroup);
+        card.appendChild(cardBody);
+
+        // Append the card to the container
+        contactContainer.appendChild(card);
+        }
+    });
+});
+
+/* ------------------- */
+/* Prefereneces Loader */
+/* ------------------- */
+document.getElementById('practiceDropdown').addEventListener('change', function() {
+    
+    const selectedPracticeId = this.value;
+    
+    fetch('get_preferences.php')
+    
+    .then(preferencesResponse => preferencesResponse.json())
+    
+    .then(preference => {
+        const selectedPractice = preference.find(preference => preference.pref_prac === selectedPracticeId);
+        document.getElementById('edUC').innerHTML = "<strong>ED/UC Preference: </strong>" + selectedPractice.pref_ed_uc;
+        document.getElementById('locations').innerHTML = "<strong>Additional Locations: </strong>" + selectedPractice.pref_other_locations;
+        document.getElementById('careAdvice').innerHTML = "<strong>Care Advice Detail: </strong>" + selectedPractice.care_advice;
+        document.getElementById('iaQuestions').innerHTML = "<strong>Initial Assesment Questions: </strong>" + selectedPractice.ia_questions;
+    });
+});
